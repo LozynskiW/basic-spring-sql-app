@@ -1,13 +1,12 @@
 package back.user;
 
+import back.security.HashingAlgorithms;
+import back.user.exceptions.UserAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.InvalidParameterException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,7 +53,7 @@ class UserService {
 
     }
 
-    public Set<UserDto> getAllUsersByEmail(String email) {
+    private Set<UserDto> getAllUsersByEmail(String email) {
 
         if (!this.isValidStringParameter(email)) throw new InvalidParameterException("Email can't be null or blank or empty");
 
@@ -64,7 +63,7 @@ class UserService {
                 .collect(Collectors.toSet());
     }
 
-    public Set<UserDto> getAllUsersByNickname(String nickname) {
+    private Set<UserDto> getAllUsersByNickname(String nickname) {
 
         if (!this.isValidStringParameter(nickname)) throw new InvalidParameterException("Nickname can't be null or blank or empty");
 
@@ -73,19 +72,30 @@ class UserService {
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toSet());
     }
-
-    public UserDto getUserByEmail(String email) {
+    @Deprecated
+    private UserDto getUserByEmail(String email) {
 
         Optional<UserEntity> userEntityOptional = userRepository.findByEmail(email);
 
         return UserDto.fromEntity(userEntityOptional.orElseThrow());
     }
 
-    public UserDto getUserByNickname(String nickname) {
+    private Optional<UserEntity> getUserEntityByEmail(String email) {
 
-        Optional<UserEntity> userEntityOptional = userRepository.findByNickname(nickname);
+        return userRepository.findByEmail(email);
+    }
 
-        return UserDto.fromEntity(userEntityOptional.orElseThrow());
+    public void addNewUser(UserDto userDto) {
+
+        if (this.getUserEntityByEmail(userDto.getEmail()).isPresent()) {
+
+            throw new UserAlreadyExistsException();
+        }
+
+        userDto.setPasswordHash(HashingAlgorithms.stringToSHA256(userDto.getPassword()));
+        userDto.setPassword("");
+
+        this.userRepository.save(UserEntity.fromDTO(userDto));
     }
 
     public void updateUser(UserDto userDto) {

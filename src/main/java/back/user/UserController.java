@@ -37,15 +37,10 @@ class UserController {
         }
     }
 
-    @RequestMapping(path = "/nickname", method = RequestMethod.GET)
-    public UserDto getUserByNickname(@RequestParam String nickname) {
+    @RequestMapping(path = "/new", method = RequestMethod.POST)
+    public void addNewUser(@RequestBody UserDto userDto) {
 
-        try {
-            return this.userService.getUserByNickname(nickname);
+        this.userService.addNewUser(userDto);
 
-        } catch (NoSuchElementException e) {
-
-            throw new UserNotFoundException();
-        }
     }
 }

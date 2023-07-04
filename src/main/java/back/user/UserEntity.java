@@ -75,6 +75,7 @@ class UserEntity {
         userEntity.setName(userDto.getName());
         userEntity.setSurname(userDto.getSurname());
         userEntity.setNickname(userDto.getNickname());
+        userEntity.setEmail(userDto.getEmail());
         userEntity.setPasswordHash(userDto.getPasswordHash());
 
         return userEntity;

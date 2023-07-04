@@ -16,6 +16,7 @@ class UserDto {
     private String surname;
     private String email;
     private String passwordHash;
+    private String password;
 
     @Override
     public String toString() {
@@ -25,7 +26,7 @@ class UserDto {
                 ", name='" + name + '\'' +
                 ", surname='" + surname + '\'' +
                 ", email='" + email + '\'' +
-                ", passwordHash='" + passwordHash + '\'' +
+                ", password='" + password + '\'' +
                 '}';
     }
 
