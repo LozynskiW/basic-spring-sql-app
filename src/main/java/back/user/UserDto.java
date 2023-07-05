@@ -1,5 +1,6 @@
 package back.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +16,9 @@ class UserDto {
     private String name;
     private String surname;
     private String email;
+    @JsonIgnore
     private String passwordHash;
+    @JsonIgnore
     private String password;
 
     @Override

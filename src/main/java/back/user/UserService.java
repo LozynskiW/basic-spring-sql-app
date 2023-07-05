@@ -2,6 +2,7 @@ package back.user;
 
 import back.security.HashingAlgorithms;
 import back.user.exceptions.UserAlreadyExistsException;
+import back.user.exceptions.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,11 +41,11 @@ class UserService {
         Set<UserDto> userEntityByEmailSet = new HashSet<>();
         Set<UserDto> userEntityByNicknameSet;
         
-        if (this.isValidStringParameter(email)) {
+        if (UserUtil.isValidStringParameter(email)) {
             userEntityByEmailSet = this.getAllUsersByEmail(email);
         }
         
-        if (this.isValidStringParameter(nickname)) {
+        if (UserUtil.isValidStringParameter(nickname)) {
             userEntityByNicknameSet = this.getAllUsersByNickname(nickname);
             userEntityByEmailSet.addAll(userEntityByNicknameSet);
         }
@@ -55,7 +56,7 @@ class UserService {
 
     private Set<UserDto> getAllUsersByEmail(String email) {
 
-        if (!this.isValidStringParameter(email)) throw new InvalidParameterException("Email can't be null or blank or empty");
+        if (!UserUtil.isValidStringParameter(email)) throw new InvalidParameterException("Email can't be null or blank or empty");
 
         return userRepository.findByEmailContaining(email)
                 .stream()
@@ -65,29 +66,22 @@ class UserService {
 
     private Set<UserDto> getAllUsersByNickname(String nickname) {
 
-        if (!this.isValidStringParameter(nickname)) throw new InvalidParameterException("Nickname can't be null or blank or empty");
+        if (!UserUtil.isValidStringParameter(nickname)) throw new InvalidParameterException("Nickname can't be null or blank or empty");
 
         return userRepository.findByNicknameContaining(nickname)
                 .stream()
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toSet());
     }
-    @Deprecated
-    private UserDto getUserByEmail(String email) {
 
-        Optional<UserEntity> userEntityOptional = userRepository.findByEmail(email);
-
-        return UserDto.fromEntity(userEntityOptional.orElseThrow());
-    }
-
-    private Optional<UserEntity> getUserEntityByEmail(String email) {
+    private Optional<UserEntity> getUserByEmail(String email) {
 
         return userRepository.findByEmail(email);
     }
 
     public void addNewUser(UserDto userDto) {
 
-        if (this.getUserEntityByEmail(userDto.getEmail()).isPresent()) {
+        if (this.getUserByEmail(userDto.getEmail()).isPresent()) {
 
             throw new UserAlreadyExistsException();
         }
@@ -98,20 +92,30 @@ class UserService {
         this.userRepository.save(UserEntity.fromDTO(userDto));
     }
 
-    public void updateUser(UserDto userDto) {
+    public void updateUser(long userId, UserDto userToUpdate) {
 
+        UserDto userBeforeUpdate = this.getUserById(userId);
+
+        UserDto userAfterUpdate = UserUtil.overrideUserDtoValues(userBeforeUpdate, userToUpdate);
+
+        System.out.println(userToUpdate);
+        System.out.println(userBeforeUpdate);
+        System.out.println(userAfterUpdate);
+
+        if (userAfterUpdate.getPassword() != null) {
+            userAfterUpdate.setPasswordHash(HashingAlgorithms.stringToSHA256(userAfterUpdate.getPassword()));
+            userAfterUpdate.setPassword("");
+        } else {
+            userAfterUpdate.setPasswordHash(userBeforeUpdate.getPasswordHash());
+        }
+
+        this.userRepository.save(UserEntity.fromDTO(userAfterUpdate));
     }
 
-    private boolean isValidStringParameter(String parameter) {
+    public void deleteUser(long userId) {
 
-        System.out.println(parameter + " =null: " + parameter == null);
-        System.out.println(parameter + " isBlank(): " + parameter.isBlank());
-        System.out.println(parameter + " isEmpty(): " + parameter.isEmpty());
+        UserDto userToDelete = this.getUserById(userId);
 
-        if (parameter == null) return false;
-
-        if (parameter.isBlank() || parameter.isEmpty()) return false;
-
-        return true;
+        this.userRepository.delete(UserEntity.fromDTO(userToDelete));
     }
 }

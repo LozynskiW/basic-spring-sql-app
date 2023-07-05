@@ -25,6 +25,12 @@ class UserController {
         return this.userService.getAllUsers();
     }
 
+    @RequestMapping(method = RequestMethod.GET, path = "/{userId}")
+    public UserDto getUserById(@PathVariable long userId) {
+
+        return this.userService.getUserById(userId);
+    }
+
     @RequestMapping(method = RequestMethod.GET)
     public Set<UserDto> getUserByEmailOrNickname(@RequestParam(required = false) String email, @RequestParam(required = false) String nickname) {
 
@@ -41,6 +47,32 @@ class UserController {
     public void addNewUser(@RequestBody UserDto userDto) {
 
         this.userService.addNewUser(userDto);
+
+    }
+
+    @RequestMapping(path = "/{userId}", method = RequestMethod.DELETE)
+    public void deleteUser(@PathVariable long userId) {
+
+        try {
+            this.userService.deleteUser(userId);
+        } catch (NoSuchElementException e) {
+
+            throw new UserNotFoundException("No such user to delete");
+        }
+
+
+    }
+
+    @RequestMapping(path = "/{userId}", method = RequestMethod.PUT)
+    public void updateUser(@PathVariable long userId, @RequestBody UserDto userDto) {
+
+        try {
+
+            this.userService.updateUser(userId, userDto);
+        } catch (NoSuchElementException e) {
+
+            throw new UserNotFoundException("No such user to update");
+        }
 
     }
 }

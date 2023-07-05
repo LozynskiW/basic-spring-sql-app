@@ -12,4 +12,8 @@ public class UserNotFoundException extends NoSuchElementException {
     public UserNotFoundException() {
         super("No such user found");
     }
+
+    public UserNotFoundException(String s) {
+        super(s);
+    }
 }
